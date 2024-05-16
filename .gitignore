@@ -1,3 +1,4 @@
+input/
 ref/
 src/*
 !src/TriggerClusterMaker.cc
