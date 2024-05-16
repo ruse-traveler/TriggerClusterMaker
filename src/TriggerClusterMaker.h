@@ -1,11 +1,12 @@
 // ----------------------------------------------------------------------------
-// 'TriggerClusterMaker.h'
-// Derek Anderson
-// 05.15.2024
-//
-// A Fun4All QA module to construct trigger clusters,
-// jet patches stored in RawCluster objects, for
-// downstream analysis
+/*! \file    TriggerClusterMaker.h'
+ *  \authors Derek Anderson
+ *  \date    05.15.2024
+ *
+ *  A Fun4All QA module to construct trigger clusters,
+ *  jet patches stored in RawCluster objects, for
+ *  downstream analysis
+ */
 // ----------------------------------------------------------------------------
 
 #ifndef TRIGGERCLUSTERMAKER_H
@@ -24,9 +25,6 @@
 #include <TFile.h>
 #include <TTree.h>
 
-// module configuration
-#include "TriggerClusterMakerConfig.h"
-
 // forward declarations
 class LL1Out;
 class PHCompositeNode;
@@ -35,8 +33,49 @@ class TriggerPrimitiveContainer;
 
 
 
-// TriggerClusterMaker definition ---------------------------------------------
+// ----------------------------------------------------------------------------
+//! Options for TriggerClusterMaker module
+// ----------------------------------------------------------------------------
+struct TriggerClusterMakerConfig {
 
+  // general options
+  bool debug = true;
+
+  // output options
+  bool        saveToNode  = false;
+  bool        saveToFile  = true;
+  std::string outNodeName = "TriggerCluster";
+  std::string outFileName = "test.root";
+
+  // input nodes
+  std::array<std::string, 2> inLL1Nodes = {
+    "LL1OUT_RAW_JET",
+    "LL1OUT_JET"
+  };
+  std::array<std::string, 8> inPrimNodes = {
+    "TRIGGERPRIMITIVES_RAW_EMCAL",
+    "TRIGGERPRIMITIVES_RAW_EMCAL_LL1",
+    "TRIGGERPRIMITIVES_RAW_JET",
+    "TRIGGERPRIMITIVES_EMCAL",
+    "TRIGGERPRIMITIVES_EMCAL_LL1",
+    "TRIGGERPRIMITIVES_HCALIN",
+    "TRIGGERPRIMITIVES_HCALOUT",
+    "TRIGGERPRIMITIVES_HCAL_LL1"
+  };
+
+};
+
+
+
+// ----------------------------------------------------------------------------
+//! Makes Trigger Cluster
+// ----------------------------------------------------------------------------
+/*! This Fun4all modules ingests calorimeter triggers and
+ *  trigger primitives to turn them into RawCluster objects,
+ *  i.e. "Trigger Clusters", for downstream analysis. Output
+ *  clusters can be placed on the node tree, or saved to
+ *  a TTree in a specified output file.
+ */
 class TriggerClusterMaker : public SubsysReco {
 
   public:

@@ -1,11 +1,12 @@
 // ----------------------------------------------------------------------------
-// 'TriggerClusterMaker.cc'
-// Derek Anderson
-// 05.15.2024
-//
-// A Fun4All QA module to construct trigger clusters,
-// jet patches stored in RawCluster objects, for
-// downstream analysis
+/*! \file    TriggerClusterMaker.cc'
+ *  \authors Derek Anderson
+ *  \date    05.15.2024
+ *
+ *  A Fun4All QA module to construct trigger clusters,
+ *  jet patches stored in RawCluster objects, for
+ *  downstream analysis
+ */
 // ----------------------------------------------------------------------------
 
 #define TRIGGERCLUSTERMAKER_CC
@@ -33,8 +34,11 @@
 
 
 
-// ctor/dtor ------------------------------------------------------------------
+// ctor/dtor ==================================================================
 
+// ----------------------------------------------------------------------------
+//! Module constructor
+// ----------------------------------------------------------------------------
 TriggerClusterMaker::TriggerClusterMaker(const std::string &name) : SubsysReco(name) {
 
   // print debug message
@@ -50,6 +54,9 @@ TriggerClusterMaker::TriggerClusterMaker(const std::string &name) : SubsysReco(n
 
 
 
+// ----------------------------------------------------------------------------
+//! Module destructor
+// ----------------------------------------------------------------------------
 TriggerClusterMaker::~TriggerClusterMaker() {
 
   // print debug message
@@ -63,8 +70,11 @@ TriggerClusterMaker::~TriggerClusterMaker() {
 
 
 
-// fun4all methods ------------------------------------------------------------
+// fun4all methods ============================================================
 
+// ----------------------------------------------------------------------------
+//! Initialize module
+// ----------------------------------------------------------------------------
 int TriggerClusterMaker::Init(PHCompositeNode* topNode) {
 
   if (m_config.debug) {
@@ -85,6 +95,9 @@ int TriggerClusterMaker::Init(PHCompositeNode* topNode) {
 
 
 
+// ----------------------------------------------------------------------------
+//! Grab inputs and build trigger clusters
+// ----------------------------------------------------------------------------
 int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
 
   if (m_config.debug) {
@@ -103,6 +116,9 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
 
 
 
+// ----------------------------------------------------------------------------
+//! Run final calculations
+// ----------------------------------------------------------------------------
 int TriggerClusterMaker::End(PHCompositeNode *topNode) {
 
   if (m_config.debug) {
@@ -117,8 +133,11 @@ int TriggerClusterMaker::End(PHCompositeNode *topNode) {
 
 
 
-// private methods ------------------------------------------------------------
+// private methods ============================================================
 
+// ----------------------------------------------------------------------------
+//! Initialize output file
+// ----------------------------------------------------------------------------
 void TriggerClusterMaker::InitOutFile() {
 
   // print debug message
@@ -137,6 +156,9 @@ void TriggerClusterMaker::InitOutFile() {
 
 
 
+// ----------------------------------------------------------------------------
+//! Initialize output TTree
+// ----------------------------------------------------------------------------
 void TriggerClusterMaker::InitOutTree() {
 
   // print debug message
@@ -151,6 +173,9 @@ void TriggerClusterMaker::InitOutTree() {
 
 
 
+// ----------------------------------------------------------------------------
+//! Create output node on node tree
+// ----------------------------------------------------------------------------
 void TriggerClusterMaker::InitOutNode(PHCompositeNode* topNode) {
 
   // print debug message
@@ -165,6 +190,9 @@ void TriggerClusterMaker::InitOutNode(PHCompositeNode* topNode) {
 
 
 
+// ----------------------------------------------------------------------------
+//! Grab input nodes
+// ----------------------------------------------------------------------------
 void TriggerClusterMaker::GrabNodes(PHCompositeNode* topNode) {
 
   // print debug message

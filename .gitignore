@@ -3,7 +3,6 @@ ref/
 src/*
 !src/TriggerClusterMaker.cc
 !src/TriggerClusterMaker.h
-!src/TriggerClusterMakerConfig.h
 !src/TriggerClusterMakerLinkDef.h
 !src/autogen.sh
 !src/configure.ac

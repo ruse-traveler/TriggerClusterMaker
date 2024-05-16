@@ -29,7 +29,6 @@
 #include <phool/recoConsts.h>
 // module definitions
 #include </sphenix/user/danderson/install/include/triggerclustermaker/TriggerClusterMaker.h>
-#include </sphenix/user/danderson/install/include/triggerclustermaker/TriggerClusterMakerConfig.h>
 
 R__LOAD_LIBRARY(libcalo_io.so)
 R__LOAD_LIBRARY(libcalotrigger.so)
