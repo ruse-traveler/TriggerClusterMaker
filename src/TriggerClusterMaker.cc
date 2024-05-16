@@ -10,9 +10,22 @@
 
 #define TRIGGERCLUSTERMAKER_CC
 
+// c++ utiilites
+#include <algorithm>
+#include <cassert>
+#include <iostream>
+// calo base
+#include <calobase/RawCluster.h>
+// trigger libraries
+#include <calotrigger/LL1Out.h>
+#include <calotrigger/LL1Outv1.h>
+#include <calotrigger/TriggerPrimitiveContainer.h>
+#include <calotrigger/TriggerPrimitiveContainerv1.h>
 // f4a libraries
 #include <fun4all/Fun4AllReturnCodes.h>
 // phool libraries
+#include <phool/getClass.h>
+#include <phool/phool.h>
 #include <phool/PHCompositeNode.h>
 
 // module definition
@@ -25,11 +38,13 @@
 TriggerClusterMaker::TriggerClusterMaker(const std::string &name) : SubsysReco(name) {
 
   // print debug message
-  if (m_config.doDebug && (Verbosity() > 0)) {
+  if (m_config.debug && (Verbosity() > 0)) {
     std::cout << "TriggerClusterMaker::TriggerClusterMaker(const std::string &name) Calling ctor" << std::endl;
   }
 
-  /* nothing to do */
+  // initialize input nodes to null
+  std::fill(m_inLL1Nodes.begin(), m_inLL1Nodes.end(), nullptr);
+  std::fill(m_inPrimNodes.begin(), m_inPrimNodes.end(), nullptr);
 
 }  // end ctor
 
@@ -38,7 +53,7 @@ TriggerClusterMaker::TriggerClusterMaker(const std::string &name) : SubsysReco(n
 TriggerClusterMaker::~TriggerClusterMaker() {
 
   // print debug message
-  if (m_config.doDebug && (Verbosity() > 0)) {
+  if (m_config.debug && (Verbosity() > 0)) {
     std::cout << "TriggerClusterMaker::~TriggerClusterMaker() Calling dtor" << std::endl;
   }
 
@@ -52,12 +67,18 @@ TriggerClusterMaker::~TriggerClusterMaker() {
 
 int TriggerClusterMaker::Init(PHCompositeNode* topNode) {
 
-  if (m_config.doDebug) {
+  if (m_config.debug) {
     std::cout << "TriggerClusterMaker::Init(PHCompositeNode *topNode) Initializing" << std::endl;
   }
 
-  /* TODO fill in */
-
+  // initialize outputs
+  if (m_config.saveToNode) {
+    InitOutNode(topNode);
+  }
+  if (m_config.saveToFile) {
+    InitOutFile();
+    InitOutTree();
+  }
   return Fun4AllReturnCodes::EVENT_OK;
 
 }  // end 'Init(PHCompositeNode*)'
@@ -66,9 +87,12 @@ int TriggerClusterMaker::Init(PHCompositeNode* topNode) {
 
 int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
 
-  if (m_config.doDebug) {
+  if (m_config.debug) {
     std::cout << "TriggerClusterMaker::process_event(PHCompositeNode *topNode) Processing Event" << std::endl;
   }
+
+  // grab input nodes
+  GrabNodes(topNode);
 
   /* TODO fill in */
 
@@ -81,7 +105,7 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
 
 int TriggerClusterMaker::End(PHCompositeNode *topNode) {
 
-  if (m_config.doDebug) {
+  if (m_config.debug) {
     std::cout << "TriggerClusterMaker::End(PHCompositeNode *topNode) This is the End..." << std::endl;
   }
 
@@ -95,14 +119,80 @@ int TriggerClusterMaker::End(PHCompositeNode *topNode) {
 
 // private methods ------------------------------------------------------------
 
-void TriggerClusterMaker::GrabNodes(PHCompositeNode* topNode) {
+void TriggerClusterMaker::InitOutFile() {
 
   // print debug message
-  if (m_config.doDebug && (Verbosity() > 0)) {
-    std::cout << "TriggerClusterMaker::GrabNodes(PHCompositeNode*) Grabbing input nodes" << std::endl;
+  if (m_config.debug && (Verbosity() > 0)) {
+    std::cout << "TriggerClusterMaker::InitOutFile() Creating output file" << std::endl;
+  }
+
+  m_outFile = std::make_unique<TFile>(m_config.outFileName.data(), "recreate");
+  if (!m_outFile) {
+    std::cerr << PHWHERE << ": PANIC! Couldn't output file!" << std::endl;
+    assert(m_outFile);
+  }
+  return;
+
+}  // end 'InitOutFile()'
+
+
+
+void TriggerClusterMaker::InitOutTree() {
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 0)) {
+    std::cout << "TriggerClusterMaker::InitOutTree() Creating output tree" << std::endl;
   }
 
   /* TODO fill in */
+  return;
+
+}  // end 'InitOutTree()'
+
+
+
+void TriggerClusterMaker::InitOutNode(PHCompositeNode* topNode) {
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 0)) {
+    std::cout << "TriggerClusterMaker::InitOutNode(PHCompositeNode*) Creating output node" << std::endl;
+  }
+
+  /* TODO fill in */
+  return;
+
+}  // end 'InitOutNode(PHCompositeNode*)'
+
+
+
+void TriggerClusterMaker::GrabNodes(PHCompositeNode* topNode) {
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 0)) {
+    std::cout << "TriggerClusterMaker::GrabNodes(PHCompositeNode*) Grabbing input nodes" << std::endl;
+  }
+
+  // get LL1 nodes
+  for (const std::string& inLL1Node : m_config.inLL1Nodes) {
+    m_inLL1Nodes.push_back(
+      findNode::getClass<LL1Out>(topNode, inLL1Node)
+    );
+    if (!m_inLL1Nodes.back()) {
+      std::cerr << PHWHERE << ": PANIC! Couldn't grab LL1Out node '" << inLL1Node << "'!" << std::endl;
+      assert(m_inLL1Nodes.back());
+    }
+  }
+
+  // get trigger primitive nodes
+  for (const std::string& inPrimNode : m_config.inPrimNodes) {
+    m_inPrimNodes.push_back(
+      findNode::getClass<TriggerPrimitiveContainer>(topNode, inPrimNode)
+    );
+    if (!m_inPrimNodes.back()) {
+      std::cerr << PHWHERE << ": PANIC! Couldn't grab TriggerPrimitive node '" << inPrimNode << "'!" << std::endl;
+      assert(m_inPrimNodes.back());
+    }
+  }
   return;
 
 }  // end 'GrabNodes(PHCompositeNode*)'
