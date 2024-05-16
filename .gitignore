@@ -1,0 +1,9 @@
+ref/
+src/*
+!src/TriggerClusterMaker.cc
+!src/TriggerClusterMaker.h
+!src/TriggerClusterMakerLinkDef.h
+!src/autogen.sh
+!src/configure.ac
+!src/Makefile.am
+!src/sphx-build
