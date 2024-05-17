@@ -11,6 +11,7 @@
 // c++ utilities
 #include <string>
 // calotrigger utilities
+#include <caloreco/CaloTowerCalib.h>
 #include <caloreco/CaloTowerBuilder.h>
 #include <caloreco/CaloWaveformProcessing.h>
 #include <calotrigger/LL1PacketGetter.h>
@@ -42,19 +43,31 @@ R__LOAD_LIBRARY(/sphenix/user/danderson/install/lib/libtriggerclustermaker.so)
 
 void Fun4All_TestTriggerClusterMaker(
   const int runnumber = 41725,
-  const int nEvents = 10,
+  const int nEvents = 0,
   const int verbosity = 5,
-  const std::string inFile = "input/DST_PRDF-00041725-0000.root"
+  const std::string inFile = "input/DST_PRDF-00041725-0000.root",
+  const std::string lutFile = "/sphenix/user/dlis/Projects/macros/CDBTest/emcal_ll1_lut.root"
 ) {
 
   // options ------------------------------------------------------------------
 
   // tower builder options
-  const uint32_t    nSamples = 12;
-  const std::string prefix   = "WAVEFORM_";
+  const bool        offline     = true;
+  const uint32_t    nSamples    = 12;
+  const std::string wavePrefix  = "WAVEFORM_";
+  const std::string calibPrefix = "TOWERSWAVEFORM_CALIB_";
 
-  // twer builder type: need waveforms for trigger primitives
+  // tower builder type: need waveforms for trigger primitives
   CaloTowerDefs::BuilderType build = CaloTowerDefs::kPRDFWaveform;
+
+  // emulator options
+  const bool        useEMCal = true;
+  const bool        useIHCal = false;
+  const bool        useOHCal = false;
+  const uint32_t    iThresh  = 1;
+  const uint32_t    nSampUse = 6;
+  const uint32_t    nDelay   = 5;
+  const std::string type     = "PHOTON";
 
   // trigger cluster maker options
   TriggerClusterMakerConfig cfg_maker {
@@ -98,8 +111,9 @@ void Fun4All_TestTriggerClusterMaker(
   emBuilder -> set_detector_type(CaloTowerDefs::CEMC);
   emBuilder -> set_processing_type(CaloWaveformProcessing::FAST);
   emBuilder -> set_builder_type(build);
-  emBuilder -> set_outputNodePrefix(prefix);
+  emBuilder -> set_outputNodePrefix(wavePrefix);
   emBuilder -> set_nsamples(nSamples);
+  emBuilder -> set_offlineflag(offline);
   f4a       -> registerSubsystem(emBuilder);
 
   // build inner hcal towers
@@ -107,8 +121,9 @@ void Fun4All_TestTriggerClusterMaker(
   ihBuilder -> set_detector_type(CaloTowerDefs::HCALIN);
   ihBuilder -> set_processing_type(CaloWaveformProcessing::FAST);
   ihBuilder -> set_builder_type(build);
-  ihBuilder -> set_outputNodePrefix(prefix);
+  ihBuilder -> set_outputNodePrefix(wavePrefix);
   ihBuilder -> set_nsamples(nSamples);
+  ihBuilder -> set_offlineflag(offline);
   f4a       -> registerSubsystem(ihBuilder);
 
   // build outer hcal towers
@@ -116,9 +131,44 @@ void Fun4All_TestTriggerClusterMaker(
   ohBuilder -> set_detector_type(CaloTowerDefs::HCALOUT);
   ohBuilder -> set_processing_type(CaloWaveformProcessing::FAST);
   ohBuilder -> set_builder_type(build);
-  ohBuilder -> set_outputNodePrefix(prefix);
+  ohBuilder -> set_outputNodePrefix(wavePrefix);
   ohBuilder -> set_nsamples(nSamples);
+  ohBuilder -> set_offlineflag(offline);
   f4a       -> registerSubsystem(ohBuilder);
+
+  // calibrate emcal towers
+  CaloTowerCalib* emCalib = new CaloTowerCalib();
+  emCalib -> set_detector_type(CaloTowerDefs::CEMC);
+  emCalib -> set_inputNodePrefix(wavePrefix);
+  emCalib -> set_outputNodePrefix(calibPrefix);
+  f4a     -> registerSubsystem(emCalib);
+
+  // calibrate inner hcal towers
+  CaloTowerCalib* ihCalib = new CaloTowerCalib();
+  ihCalib -> set_detector_type(CaloTowerDefs::HCALIN);
+  ihCalib -> set_inputNodePrefix(wavePrefix);
+  ihCalib -> set_outputNodePrefix(calibPrefix);
+  f4a     -> registerSubsystem(ihCalib);
+
+  // calibrate outer hcal towers
+  CaloTowerCalib* ohCalib = new CaloTowerCalib();
+  ohCalib -> set_detector_type(CaloTowerDefs::HCALOUT);
+  ohCalib -> set_inputNodePrefix(wavePrefix);
+  ohCalib -> set_outputNodePrefix(calibPrefix);
+  f4a     -> registerSubsystem(ohCalib);
+
+  // run emulator
+  CaloTriggerEmulator* emulator = new CaloTriggerEmulator("TriggerEmulator");
+  emulator -> Verbosity(verbosity);
+  emulator -> setTriggerType(type);
+  emulator -> setNSamples(nSamples);
+  emulator -> setTriggerSample(nSampUse);
+  emulator -> useEMCAL(useEMCal);
+  emulator -> useHCALIN(useIHCal);
+  emulator -> useHCALOUT(useOHCal);
+  emulator -> setEmcalLUTFile(lutFile);
+  emulator -> setThreshold(iThresh);
+  f4a      -> registerSubsystem(emulator);
 
   // finally, make trigger clusters
   TriggerClusterMaker* maker = new TriggerClusterMaker("TriggerClusterMaker");
