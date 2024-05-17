@@ -1,4 +1,5 @@
 input/
+test/
 ref/
 src/*
 !src/TriggerClusterMaker.cc
