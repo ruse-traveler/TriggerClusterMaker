@@ -107,7 +107,87 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
   // grab input nodes
   GrabNodes(topNode);
 
-  /* TODO fill in */
+  // loop over LL1 nodes
+  LL1Outv1::Range lloWordRange;
+  for (auto inLL1Node : m_inLL1Nodes) {
+
+    // loop over trigger words
+    lloWordRange = inLL1Node -> getTriggerWords();
+    for (
+      LL1Outv1::Iter itTrgWord = lloWordRange.first;
+      itTrgWord != lloWordRange.second;
+      ++itTrgWord
+    ) {
+
+      auto word = (*itTrgWord).second;
+      std::cout << "TEST-3 word = " << word << std::endl;
+
+      // loop through word
+      for (
+        auto itWord = word -> begin();
+        itWord != word -> end();
+        ++itWord
+      ) {
+        std::cout << "  TEST-2 actual sum = " << (*itWord) << ", key = " << (*itTrgWord).first << ", sample = " << std::distance(word -> begin(), itWord) << std::endl;
+      }  // end word loop
+
+      /* TODO things will be done here... */
+
+    }  // end trigger word loop
+
+    // loop over trigger bits
+    for (auto& bit : *(inLL1Node -> GetTriggerBits())) {
+
+      std::cout << "TEST-1 bits = " << bit << std::endl;
+
+      /* TODO things will be done here... */
+
+    }  // end bit loop
+  }  // end LL1 node loop
+
+
+  // loop over trigger primitive nodes
+  TriggerPrimitivev1::Range          trgPrimSumRange;
+  TriggerPrimitiveContainerv1::Range trgPrimStoreRange;
+  for (auto inPrimNode : m_inPrimNodes) {
+
+    // loop over primitives
+    trgPrimStoreRange = inPrimNode -> getTriggerPrimitives();
+    for (
+      TriggerPrimitiveContainerv1::Iter itTrgPrim = trgPrimStoreRange.first;
+      itTrgPrim != trgPrimStoreRange.second;
+      ++itTrgPrim
+    ) {
+
+      // grab trigger primitve
+      TriggerPrimitive* primitive = (*itTrgPrim).second;
+      std::cout << "TEST0 primitive = " << primitive << std::endl; 
+
+      // loop over sums
+      trgPrimSumRange = primitive -> getSums();
+      for (
+        TriggerPrimitive::Iter itPrimSum = trgPrimSumRange.first;
+        itPrimSum != trgPrimSumRange.second;
+        ++itPrimSum
+      ) {
+
+        auto sum = (*itPrimSum).second;
+        std::cout << "  TEST1 sum = " << sum << std::endl;
+
+        for (
+          auto itSum = sum -> begin();
+          itSum != sum -> end();
+          ++itSum
+        ) {
+          std::cout << "    TEST2 actual sum = " << (*itSum) << ", key = " << (*itPrimSum).first << ", sample = " << std::distance(sum -> begin(), itSum) << std::endl;
+        }
+
+        /* TODO things will be done here... */
+
+      }  // end primitive sum loop
+    }  // end trigger primitive loop
+  }  // end trigger primitive node loop
+
 
   return Fun4AllReturnCodes::EVENT_OK;
 

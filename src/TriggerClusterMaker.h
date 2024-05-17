@@ -132,6 +132,7 @@ class TriggerClusterMaker : public SubsysReco {
     std::unique_ptr<RawClusterContainer> m_outClustStore = NULL;
 */
 
+
     // module configuration
     TriggerClusterMakerConfig m_config;
 
