@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// 'Fun4All_TestTriggerClusterMaker.C'
+// 'Fun4All_TestTriggerClusterMakerOnSim.C'
 // Derek Anderson
 // 05.16.2024
 //
@@ -41,7 +41,7 @@ R__LOAD_LIBRARY(/sphenix/user/danderson/install/lib/libtriggerclustermaker.so)
 
 // macro body -----------------------------------------------------------------
 
-void Fun4All_TestTriggerClusterMaker(
+void Fun4All_TestTriggerClusterMakerOnSim(
   const int runnumber = 41725,
   const int nEvents = 0,
   const int verbosity = 5,
