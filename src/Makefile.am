@@ -14,7 +14,8 @@ AM_CPPFLAGS = \
   -I$(ROOTSYS)/include
 
 pkginclude_HEADERS = \
-  TriggerClusterMaker.h
+  TriggerClusterMaker.h \
+  TriggerClusterMakerDefs.h
 
 if ! MAKEROOT6
   ROOT5_DICTS = \

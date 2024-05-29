@@ -24,6 +24,8 @@
 // root libraries
 #include <TFile.h>
 #include <TTree.h>
+// module utilities
+#include "TriggerClusterMakerDefs.h"
 
 // forward declarations
 class LL1Out;
@@ -93,24 +95,6 @@ class TriggerClusterMaker : public SubsysReco {
     int End(PHCompositeNode* topNode)           override;
 
   private:
-
-    // LL1 accessors
-    enum LL1 {
-      Raw,
-      Jet
-    };
-
-    // trigger primitive accessors
-    enum Primitive {
-      RawEM,
-      RawEMLL1,
-      RawTrg,
-      EMCal,
-      EMCalLL1,
-      IHCal,
-      OHCal,
-      HCalLL1
-    };
 
     // private methods
     void InitOutFile();
