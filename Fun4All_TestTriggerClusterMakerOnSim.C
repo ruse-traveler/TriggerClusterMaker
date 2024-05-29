@@ -10,6 +10,7 @@
 
 // c++ utilities
 #include <string>
+#include <vector>
 // calotrigger utilities
 #include <caloreco/CaloTowerCalib.h>
 #include <caloreco/CaloTowerBuilder.h>
@@ -29,23 +30,31 @@
 // phool utilities
 #include <phool/recoConsts.h>
 // module definitions
-#include </sphenix/user/danderson/install/include/triggerclustermaker/TriggerClusterMaker.h>
+#include <triggerclustermaker/TriggerClusterMaker.h>
 
+// load libraries
 R__LOAD_LIBRARY(libcalo_io.so)
 R__LOAD_LIBRARY(libcalotrigger.so)
 R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libfun4allraw.so)
-R__LOAD_LIBRARY(/sphenix/user/danderson/install/lib/libtriggerclustermaker.so)
+R__LOAD_LIBRARY(libtriggerclustermaker.so)
+
+// convenience types
+typedef std::vector<std::string> SVec;
+
 
 
 
 // macro body -----------------------------------------------------------------
 
 void Fun4All_TestTriggerClusterMakerOnSim(
-  const int runnumber = 41725,
-  const int nEvents = 0,
-  const int verbosity = 5,
-  const std::string inFile = "input/DST_PRDF-00041725-0000.root",
+  const int  runnumber  = 11,
+  const int  nEvents    = 10,
+  const int  verbosity  = 5,
+  const SVec vecInFiles = {
+    "input/pp200py8jet10run11.DstCaloCluster.list",
+    "input/pp200py8jet10run11.DstG4Hits.list"
+  },
   const std::string lutFile = "/sphenix/user/dlis/Projects/macros/CDBTest/emcal_ll1_lut.root"
 ) {
 
@@ -67,7 +76,7 @@ void Fun4All_TestTriggerClusterMakerOnSim(
   const uint32_t    iThresh  = 1;
   const uint32_t    nSampUse = 6;
   const uint32_t    nDelay   = 5;
-  const std::string type     = "PHOTON";
+  const std::string type     = "JET";
 
   // trigger cluster maker options
   TriggerClusterMakerConfig cfg_maker {
@@ -88,11 +97,17 @@ void Fun4All_TestTriggerClusterMakerOnSim(
   rc -> set_StringFlag("CDB_GLOBALTAG", "ProdA_2023");
   rc -> set_uint64Flag("TIMESTAMP", runnumber);
 
-  // register inputs/outputs --------------------------------------------------
+  // register inputs/outputs and handelers ------------------------------------
 
-  Fun4AllPrdfInputManager* input = new Fun4AllPrdfInputManager("InputPrdfManager");
-  input -> fileopen(inFile);
-  f4a   -> registerInputManager(input);
+  for (size_t iInput = 0; iInput < vecInFiles.size(); ++iInput) {
+    Fun4AllDstInputManager* input = new Fun4AllDstInputManager("InputDstManager" + std::to_string(iInput));
+    input -> AddListFile(vecInFiles[iInput]);
+    f4a   -> registerInputManager(input);
+  }
+
+  // register flag handler
+  FlagHandler* handler = new FlagHandler();
+  f4a -> registerSubsystem(handler);
 
   // register subsystem reco modules ------------------------------------------
 
