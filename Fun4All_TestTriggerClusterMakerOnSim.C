@@ -55,7 +55,11 @@ void Fun4All_TestTriggerClusterMakerOnSim(
     "input/pp200py8jet10run11.DstCaloCluster.list",
     "input/pp200py8jet10run11.DstG4Hits.list"
   },
-  const std::string lutFile = "/sphenix/user/dlis/Projects/macros/CDBTest/emcal_ll1_lut.root"
+  const SVec lutFiles = {
+    "/sphenix/user/dlis/Projects/macros/CDBTest/emcal_ll1_lut.root",
+    "/sphenix/user/dlis/Projects/macros/CDBTest/hcalin_ll1_lut.root",
+    "/sphenix/user/dlis/Projects/macros/CDBTest/hcalout_ll1_lut.root"
+  }
 ) {
 
   // options ------------------------------------------------------------------
@@ -71,8 +75,8 @@ void Fun4All_TestTriggerClusterMakerOnSim(
 
   // emulator options
   const bool        useEMCal = true;
-  const bool        useIHCal = false;
-  const bool        useOHCal = false;
+  const bool        useIHCal = true;
+  const bool        useOHCal = true;
   const uint32_t    iThresh  = 1;
   const uint32_t    nSampUse = 6;
   const uint32_t    nDelay   = 5;
@@ -110,16 +114,6 @@ void Fun4All_TestTriggerClusterMakerOnSim(
   f4a -> registerSubsystem(handler);
 
   // register subsystem reco modules ------------------------------------------
-
-  // place LL1 onto NodeTree for jet LL1 board
-  LL1PacketGetter* lloJetGetter = new LL1PacketGetter("LL1PACKETGETTER_JET", "JET", "HCAL");
-  lloJetGetter -> Verbosity(verbosity);
-  f4a          -> registerSubsystem(lloJetGetter);
-
-  // likewise for emcal LL1 boards
-  LL1PacketGetter* lloEMCalGetter = new LL1PacketGetter("LL1PACKETGETTER_EMCAL", "NONE", "EMCAL");
-  lloEMCalGetter -> Verbosity(verbosity);
-  f4a            -> registerSubsystem(lloEMCalGetter);
 
   // build emcal towers  
   CaloTowerBuilder* emBuilder = new CaloTowerBuilder("EMCALBUILDER");
@@ -181,7 +175,9 @@ void Fun4All_TestTriggerClusterMakerOnSim(
   emulator -> useEMCAL(useEMCal);
   emulator -> useHCALIN(useIHCal);
   emulator -> useHCALOUT(useOHCal);
-  emulator -> setEmcalLUTFile(lutFile);
+  emulator -> setEmcalLUTFile(lutFiles.at(0));
+  emulator -> setHcalinLUTFile(lutFiles.at(1));
+  emulator -> setHcaloutLUTFile(lutFiles.at(2));
   emulator -> setThreshold(iThresh);
   f4a      -> registerSubsystem(emulator);
 
