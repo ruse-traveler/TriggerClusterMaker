@@ -29,13 +29,13 @@
 // phool utilities
 #include <phool/recoConsts.h>
 // module definitions
-#include </sphenix/user/danderson/install/include/triggerclustermaker/TriggerClusterMaker.h>
+#include <triggerclustermaker/TriggerClusterMaker.h>
 
 R__LOAD_LIBRARY(libcalo_io.so)
 R__LOAD_LIBRARY(libcalotrigger.so)
 R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libfun4allraw.so)
-R__LOAD_LIBRARY(/sphenix/user/danderson/install/lib/libtriggerclustermaker.so)
+R__LOAD_LIBRARY(libtriggerclustermaker.so)
 
 
 
