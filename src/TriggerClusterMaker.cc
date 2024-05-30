@@ -120,7 +120,6 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
     ) {
 
       auto word = (*itTrgWord).second;
-      std::cout << "TEST-3 word = " << word << std::endl;
 
       // loop through word
       for (
@@ -128,21 +127,24 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
         itWord != word -> end();
         ++itWord
       ) {
-        std::cout << "  TEST-2 actual sum = " << (*itWord) << ", key = " << (*itTrgWord).first << ", sample = " << std::distance(word -> begin(), itWord) << std::endl;
+
+        // get eta, phi bin of LL1
+        const uint64_t iEta = TriggerClusterMakerDefs::GetBinManually(
+          (*itTrgWord).first,
+           TriggerClusterMakerDefs::Bin::Eta,
+           TriggerClusterMakerDefs::Type::LL1
+        );
+        const uint64_t iPhi = TriggerClusterMakerDefs::GetBinManually(
+          (*itTrgWord).first,
+           TriggerClusterMakerDefs::Bin::Phi,
+           TriggerClusterMakerDefs::Type::LL1
+        );
+
       }  // end word loop
 
       /* TODO things will be done here... */
 
     }  // end trigger word loop
-
-    // loop over trigger bits
-    for (auto& bit : *(inLL1Node -> GetTriggerBits())) {
-
-      std::cout << "TEST-1 bits = " << bit << std::endl;
-
-      /* TODO things will be done here... */
-
-    }  // end bit loop
   }  // end LL1 node loop
 
 
@@ -161,7 +163,6 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
 
       // grab trigger primitve
       TriggerPrimitive* primitive = (*itTrgPrim).second;
-      std::cout << "TEST0 primitive = " << primitive << std::endl; 
 
       // loop over sums
       trgPrimSumRange = primitive -> getSums();
@@ -172,14 +173,23 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
       ) {
 
         auto sum = (*itPrimSum).second;
-        std::cout << "  TEST1 sum = " << sum << std::endl;
-
         for (
           auto itSum = sum -> begin();
           itSum != sum -> end();
           ++itSum
         ) {
-          std::cout << "    TEST2 actual sum = " << (*itSum) << ", key = " << (*itPrimSum).first << ", sample = " << std::distance(sum -> begin(), itSum) << std::endl;
+
+        // get eta, phi bin of LL1
+        const uint64_t iEta = TriggerClusterMakerDefs::GetBinManually(
+          (*itPrimSum).first,
+           TriggerClusterMakerDefs::Bin::Eta,
+           TriggerClusterMakerDefs::Type::Prim
+        );
+        const uint64_t iPhi = TriggerClusterMakerDefs::GetBinManually(
+          (*itPrimSum).first,
+           TriggerClusterMakerDefs::Bin::Phi,
+           TriggerClusterMakerDefs::Type::Prim
+        );
         }
 
         /* TODO things will be done here... */
