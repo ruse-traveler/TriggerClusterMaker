@@ -101,6 +101,8 @@ class TriggerClusterMaker : public SubsysReco {
     void InitOutTree();
     void InitOutNode(PHCompositeNode* topNode);
     void GrabNodes(PHCompositeNode* topNode);
+    void MakeCluster(LL1Out* trigger);
+    void MakeCluster(TriggerPrimitive* trigger);
 
     // f4a members
     std::vector<LL1Out*>                    m_inLL1Nodes;

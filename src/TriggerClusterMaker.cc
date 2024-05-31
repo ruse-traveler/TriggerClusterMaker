@@ -119,37 +119,16 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
       ++itTrgWord
     ) {
 
-      auto word = (*itTrgWord).second;
-
-      // loop through word
-      for (
-        auto itWord = word -> begin();
-        itWord != word -> end();
-        ++itWord
-      ) {
-
-        // get eta, phi bin of LL1
-        const uint64_t iEta = TriggerClusterMakerDefs::GetBinManually(
-          (*itTrgWord).first,
-           TriggerClusterMakerDefs::Bin::Eta,
-           TriggerClusterMakerDefs::Type::LL1
-        );
-        const uint64_t iPhi = TriggerClusterMakerDefs::GetBinManually(
-          (*itTrgWord).first,
-           TriggerClusterMakerDefs::Bin::Phi,
-           TriggerClusterMakerDefs::Type::LL1
-        );
-
-      }  // end word loop
-
-      /* TODO things will be done here... */
+      // FIXME figure out how to get trigger
+      //   - primitives from LL1Out
+      //auto word = (*itTrgWord).second;
+      //MakeCluster(word);
 
     }  // end trigger word loop
   }  // end LL1 node loop
 
 
   // loop over trigger primitive nodes
-  TriggerPrimitivev1::Range          trgPrimSumRange;
   TriggerPrimitiveContainerv1::Range trgPrimStoreRange;
   for (auto inPrimNode : m_inPrimNodes) {
 
@@ -163,44 +142,12 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
 
       // grab trigger primitve
       TriggerPrimitive* primitive = (*itTrgPrim).second;
+      MakeCluster(primitive);
 
-      // loop over sums
-      trgPrimSumRange = primitive -> getSums();
-      for (
-        TriggerPrimitive::Iter itPrimSum = trgPrimSumRange.first;
-        itPrimSum != trgPrimSumRange.second;
-        ++itPrimSum
-      ) {
-
-        auto sum = (*itPrimSum).second;
-        for (
-          auto itSum = sum -> begin();
-          itSum != sum -> end();
-          ++itSum
-        ) {
-
-        // get eta, phi bin of LL1
-        const uint64_t iEta = TriggerClusterMakerDefs::GetBinManually(
-          (*itPrimSum).first,
-           TriggerClusterMakerDefs::Bin::Eta,
-           TriggerClusterMakerDefs::Type::Prim
-        );
-        const uint64_t iPhi = TriggerClusterMakerDefs::GetBinManually(
-          (*itPrimSum).first,
-           TriggerClusterMakerDefs::Bin::Phi,
-           TriggerClusterMakerDefs::Type::Prim
-        );
-        }
-
-        /* TODO things will be done here... */
-
-      }  // end primitive sum loop
     }  // end trigger primitive loop
   }  // end trigger primitive node loop
 
-
   return Fun4AllReturnCodes::EVENT_OK;
-
 
 }  // end 'process_event(PHCompositeNode*)'
 
@@ -314,5 +261,95 @@ void TriggerClusterMaker::GrabNodes(PHCompositeNode* topNode) {
   return;
 
 }  // end 'GrabNodes(PHCompositeNode*)'
+
+
+
+// ----------------------------------------------------------------------------
+//! Make cluster from an LL1Out object
+// ----------------------------------------------------------------------------
+void TriggerClusterMaker::MakeCluster(LL1Out* trigger) {
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 1)) {
+    std::cout << "TriggerClusterMaker::MakeCluster(LL1Out*) Making cluster from LL1Out object" << std::endl;
+  }
+
+/* FIXME this isn't the right way of doing this...
+
+  // loop through trigger word
+  for (
+    auto itWord = trigger -> begin();
+    itWord != trigger -> end();
+    ++itWord
+  ) {
+
+    // get eta, phi bin of LL1
+    const uint64_t iEta = TriggerClusterMakerDefs::GetBinManually(
+      (*itTrgWord).first,
+       TriggerClusterMakerDefs::Bin::Eta,
+       TriggerClusterMakerDefs::Type::LL1
+    );
+    const uint64_t iPhi = TriggerClusterMakerDefs::GetBinManually(
+      (*itTrgWord).first,
+       TriggerClusterMakerDefs::Bin::Phi,
+       TriggerClusterMakerDefs::Type::LL1
+    );
+
+  }  // end trigger loop
+
+  // TODO things will be done here... //
+*/
+  return;
+
+}  // end 'MakeCluster(LL1Out*)'
+
+
+
+// ----------------------------------------------------------------------------
+//! Make cluster from a TriggerPrimitive object
+// ----------------------------------------------------------------------------
+void TriggerClusterMaker::MakeCluster(TriggerPrimitive* trigger) {
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 1)) {
+    std::cout << "TriggerClusterMaker::MakeCluster(TriggerPrimitive*) Making cluster from TriggerPrimitive object" << std::endl;
+  }
+
+  // loop over sums
+  TriggerPrimitivev1::Range trgPrimSumRange = trigger -> getSums();
+  for (
+    TriggerPrimitive::Iter itPrimSum = trgPrimSumRange.first;
+    itPrimSum != trgPrimSumRange.second;
+    ++itPrimSum
+  ) {
+
+    auto sum = (*itPrimSum).second;
+    for (
+      auto itSum = sum -> begin();
+      itSum != sum -> end();
+      ++itSum
+    ) {
+
+      // get eta, phi bin of LL1
+      const uint64_t iEta = TriggerClusterMakerDefs::GetBinManually(
+        (*itPrimSum).first,
+         TriggerClusterMakerDefs::Bin::Eta,
+         TriggerClusterMakerDefs::Type::Prim
+      );
+      const uint64_t iPhi = TriggerClusterMakerDefs::GetBinManually(
+        (*itPrimSum).first,
+         TriggerClusterMakerDefs::Bin::Phi,
+         TriggerClusterMakerDefs::Type::Prim
+      );
+      std::cout << "CHECK (eta, phi) = (" << iEta << ", " << iPhi << ")" << std::endl;
+
+    }  // end tower loop
+
+    /* TODO things will be done here... */
+
+  }  // end primitive sum loop
+  return;
+
+}  // end 'MakeCluster(TriggerPrimitive*)'
 
 // end ------------------------------------------------------------------------
