@@ -40,6 +40,27 @@ namespace TriggerClusterMakerDefs {
 
 
 
+
+  // constants ----------------------------------------------------------------
+
+  // FIXME deprecate one mapping is fixed
+  inline std::vector<std::pair<uint32_t, uint32_t>> EtaBinRange() {
+    static std::vector<std::pair<uint32_t, uint32_t>> range = {
+      {0, 3},
+      {1, 4},
+      {2, 5},
+      {3, 6},
+      {4, 7},
+      {5, 8},
+      {6, 9},
+      {7, 10},
+      {8, 11}
+    };
+    return range;
+  }
+
+
+
   // methods ------------------------------------------------------------------
 
   // FIXME deprecate once mapping is correct
