@@ -44,8 +44,8 @@ struct TriggerClusterMakerConfig {
   bool debug = true;
 
   // output options
-  bool        saveToNode  = false;
-  bool        saveToFile  = true;
+  bool        saveToNode  = true;
+  bool        saveToFile  = false;
   std::string outNodeName = "TriggerCluster";
   std::string outFileName = "test.root";
 
@@ -111,10 +111,7 @@ class TriggerClusterMaker : public SubsysReco {
     // output members
     std::unique_ptr<TFile>               m_outFile       = NULL;
     std::unique_ptr<TTree>               m_outTree       = NULL;
-/* TODO implement
     std::unique_ptr<RawClusterContainer> m_outClustStore = NULL;
-*/
-
 
     // module configuration
     TriggerClusterMakerConfig m_config;

@@ -28,6 +28,10 @@
 #include <phool/getClass.h>
 #include <phool/phool.h>
 #include <phool/PHCompositeNode.h>
+#include <phool/PHIODataNode.h>
+#include <phool/PHNode.h>
+#include <phool/PHNodeIterator.h>
+#include <phool/PHObject.h>
 
 // module definition
 #include "TriggerClusterMaker.h"
@@ -220,7 +224,35 @@ void TriggerClusterMaker::InitOutNode(PHCompositeNode* topNode) {
     std::cout << "TriggerClusterMaker::InitOutNode(PHCompositeNode*) Creating output node" << std::endl;
   }
 
-  /* TODO fill in */
+  // find dst node
+  //   - if missing, abort
+  PHNodeIterator   itNode(topNode);
+  PHCompositeNode* dstNode = static_cast<PHCompositeNode*>(itNode.findFirst("PHCompositeNode", "DST"));
+  if (!dstNode) {
+    std::cerr << PHWHERE << ": PANIC! DST node missing! Aborting!" << std::endl;
+    assert(dstNode);
+  }
+
+  // find or add LL1 node
+  PHNodeIterator   itTrg(dstNode);
+  PHCompositeNode* trgNode = static_cast<PHCompositeNode*>(itNode.findFirst("PHCompositeNode", "LL1"));
+  if (!trgNode) {
+    PHCompositeNode* trgNodeToAdd = new PHCompositeNode("LL1");
+    dstNode -> addNode(trgNodeToAdd);
+    trgNode =  trgNodeToAdd;
+  }
+
+  // create container for clusters
+  m_outClustStore = std::make_unique<RawClusterContainer>();
+
+  // and add node to tree
+  PHIODataNode<PHObject>* clustNode = new PHIODataNode<PHObject>(m_outClustStore.get(), m_config.outNodeName, "PHObject");
+  if (!clustNode) {
+    std::cerr << PHWHERE << ": PANIC! Couldn't create cluster node! Aborting!" << std::endl;
+    assert(clustNode);
+  } else {
+    trgNode -> addNode(clustNode);
+  }
   return;
 
 }  // end 'InitOutNode(PHCompositeNode*)'
@@ -267,6 +299,8 @@ void TriggerClusterMaker::GrabNodes(PHCompositeNode* topNode) {
 // ----------------------------------------------------------------------------
 //! Make cluster from an LL1Out object
 // ----------------------------------------------------------------------------
+//   - FIXME it might be good to make this return a
+//     RawClusterv1...
 void TriggerClusterMaker::MakeCluster(LL1Out* trigger) {
 
   // print debug message
@@ -308,6 +342,8 @@ void TriggerClusterMaker::MakeCluster(LL1Out* trigger) {
 // ----------------------------------------------------------------------------
 //! Make cluster from a TriggerPrimitive object
 // ----------------------------------------------------------------------------
+//   - FIXME it might be good to make this return a
+//     RawClusterv1...
 void TriggerClusterMaker::MakeCluster(TriggerPrimitive* trigger) {
 
   // print debug message

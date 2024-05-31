@@ -85,7 +85,7 @@ void Fun4All_TestTriggerClusterMakerOnSim(
   // trigger cluster maker options
   TriggerClusterMakerConfig cfg_maker {
     .debug      = true,
-    .saveToNode = false,
+    .saveToNode = true,
     .saveToFile = false
   };
 
