@@ -85,11 +85,8 @@ void Fun4All_TestTriggerClusterMakerOnSim(
 
   // trigger cluster maker options
   TriggerClusterMakerConfig cfg_maker {
-    .debug       = true,
-    .saveToNode  = true,
-    .saveToFile  = false,
-    .outNodeName = "TriggerClusters",
-    .outFileName = "outFile.root",
+    .debug        = true,
+    .outNodeName  = "TriggerClusters",
     .inTowerNodes = {
       "TOWERINFO_CALIB_CEMC",
       "TOWERINFO_CALIB_HCALIN",

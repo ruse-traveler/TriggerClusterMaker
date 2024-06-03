@@ -16,7 +16,9 @@
 #include <cassert>
 #include <iostream>
 // calo base
-#include <calobase/RawCluster.h>
+#include <calobase/RawClusterv1.h>
+#include <calobase/TowerInfo.h>
+#include <calobase/TowerInfoContainer.h>
 // trigger libraries
 #include <calotrigger/LL1Out.h>
 #include <calotrigger/LL1Outv1.h>
@@ -50,9 +52,10 @@ TriggerClusterMaker::TriggerClusterMaker(const std::string &name) : SubsysReco(n
     std::cout << "TriggerClusterMaker::TriggerClusterMaker(const std::string &name) Calling ctor" << std::endl;
   }
 
-  // initialize input nodes to null
-  std::fill(m_inLL1Nodes.begin(), m_inLL1Nodes.end(), nullptr);
-  std::fill(m_inPrimNodes.begin(), m_inPrimNodes.end(), nullptr);
+  // make sure vectors are clear
+  m_inTowerNodes.clear();
+  m_inLL1Nodes.clear();
+  m_inPrimNodes.clear();
 
 }  // end ctor
 
@@ -86,13 +89,7 @@ int TriggerClusterMaker::Init(PHCompositeNode* topNode) {
   }
 
   // initialize outputs
-  if (m_config.saveToNode) {
-    InitOutNode(topNode);
-  }
-  if (m_config.saveToFile) {
-    InitOutFile();
-    InitOutTree();
-  }
+  InitOutNode(topNode);
   return Fun4AllReturnCodes::EVENT_OK;
 
 }  // end 'Init(PHCompositeNode*)'
@@ -146,7 +143,7 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
 
       // grab trigger primitve
       TriggerPrimitive* primitive = (*itTrgPrim).second;
-      MakeCluster(primitive);
+      MakeCluster(primitive, TriggerDefs::DetectorId::hcaloutDId);
 
     }  // end trigger primitive loop
   }  // end trigger primitive node loop
@@ -177,44 +174,6 @@ int TriggerClusterMaker::End(PHCompositeNode *topNode) {
 // private methods ============================================================
 
 // ----------------------------------------------------------------------------
-//! Initialize output file
-// ----------------------------------------------------------------------------
-void TriggerClusterMaker::InitOutFile() {
-
-  // print debug message
-  if (m_config.debug && (Verbosity() > 0)) {
-    std::cout << "TriggerClusterMaker::InitOutFile() Creating output file" << std::endl;
-  }
-
-  m_outFile = std::make_unique<TFile>(m_config.outFileName.data(), "recreate");
-  if (!m_outFile) {
-    std::cerr << PHWHERE << ": PANIC! Couldn't output file!" << std::endl;
-    assert(m_outFile);
-  }
-  return;
-
-}  // end 'InitOutFile()'
-
-
-
-// ----------------------------------------------------------------------------
-//! Initialize output TTree
-// ----------------------------------------------------------------------------
-void TriggerClusterMaker::InitOutTree() {
-
-  // print debug message
-  if (m_config.debug && (Verbosity() > 0)) {
-    std::cout << "TriggerClusterMaker::InitOutTree() Creating output tree" << std::endl;
-  }
-
-  /* TODO fill in */
-  return;
-
-}  // end 'InitOutTree()'
-
-
-
-// ----------------------------------------------------------------------------
 //! Create output node on node tree
 // ----------------------------------------------------------------------------
 void TriggerClusterMaker::InitOutNode(PHCompositeNode* topNode) {
@@ -243,10 +202,10 @@ void TriggerClusterMaker::InitOutNode(PHCompositeNode* topNode) {
   }
 
   // create container for clusters
-  m_outClustStore = std::make_unique<RawClusterContainer>();
+  m_outClustNode = new RawClusterContainer();
 
   // and add node to tree
-  PHIODataNode<PHObject>* clustNode = new PHIODataNode<PHObject>(m_outClustStore.get(), m_config.outNodeName, "PHObject");
+  PHIODataNode<PHObject>* clustNode = new PHIODataNode<PHObject>(m_outClustNode, m_config.outNodeName, "PHObject");
   if (!clustNode) {
     std::cerr << PHWHERE << ": PANIC! Couldn't create cluster node! Aborting!" << std::endl;
     assert(clustNode);
@@ -267,6 +226,17 @@ void TriggerClusterMaker::GrabNodes(PHCompositeNode* topNode) {
   // print debug message
   if (m_config.debug && (Verbosity() > 0)) {
     std::cout << "TriggerClusterMaker::GrabNodes(PHCompositeNode*) Grabbing input nodes" << std::endl;
+  }
+
+  // get tower info nodes
+  for (const std::string& inTowerNode : m_config.inTowerNodes) {
+    m_inTowerNodes.push_back(
+      findNode::getClass<TowerInfoContainer>(topNode, inTowerNode)
+    );
+    if (!m_inTowerNodes.back()) {
+      std::cerr<< PHWHERE << ": PANIC! Couldn't grab input TowerInfoContainer node '" << inTowerNode << "'!" << std::endl;
+      assert(m_inTowerNodes.back());
+    }
   }
 
   // get LL1 nodes
@@ -344,7 +314,7 @@ void TriggerClusterMaker::MakeCluster(LL1Out* trigger) {
 // ----------------------------------------------------------------------------
 //   - FIXME it might be good to make this return a
 //     RawClusterv1...
-void TriggerClusterMaker::MakeCluster(TriggerPrimitive* trigger) {
+void TriggerClusterMaker::MakeCluster(TriggerPrimitive* trigger, TriggerDefs::DetectorId detector) {
 
   // print debug message
   if (m_config.debug && (Verbosity() > 1)) {
@@ -359,6 +329,10 @@ void TriggerClusterMaker::MakeCluster(TriggerPrimitive* trigger) {
     ++itPrimSum
   ) {
 
+    // create new cluster
+    RawClusterv1* cluster = new RawClusterv1();
+
+    // loop over towers in sum
     auto sum = (*itPrimSum).second;
     for (
       auto itSum = sum -> begin();
@@ -366,26 +340,32 @@ void TriggerClusterMaker::MakeCluster(TriggerPrimitive* trigger) {
       ++itSum
     ) {
 
-      // get eta, phi bin of LL1
-      const uint64_t iEta = TriggerClusterMakerDefs::GetBinManually(
+      // get eta, phi bin of sum
+      const uint32_t iEta = TriggerClusterMakerDefs::GetBinManually(
         (*itPrimSum).first,
          TriggerClusterMakerDefs::Bin::Eta,
          TriggerClusterMakerDefs::Type::Prim
       );
-      const uint64_t iPhi = TriggerClusterMakerDefs::GetBinManually(
+      const uint32_t iPhi = TriggerClusterMakerDefs::GetBinManually(
         (*itPrimSum).first,
          TriggerClusterMakerDefs::Bin::Phi,
          TriggerClusterMakerDefs::Type::Prim
       );
-      std::cout << "CHECK (eta, phi) = (" << iEta << ", " << iPhi << ")" << std::endl;
+
+      // then get tower index
+      //   - TODO iterate through all tower indices in range
+      const uint32_t key = TriggerClusterMakerDefs::GetKeyFromEtaPhiIndex(iEta, iPhi, detector);
+      std::cout << "    CHECK0 (eta, phi) = (" << iEta << ", " << iPhi << "), key = " << key
+                << std::endl;
 
     }  // end tower loop
 
-    /* TODO things will be done here... */
+    // put cluster in node
+    m_outClustNode -> AddCluster(cluster);
 
   }  // end primitive sum loop
   return;
 
-}  // end 'MakeCluster(TriggerPrimitive*)'
+}  // end 'MakeCluster(TriggerPrimitive*, TriggerDefs::DetectorId)'
 
 // end ------------------------------------------------------------------------

@@ -21,9 +21,6 @@
 #include <calobase/RawClusterContainer.h>
 // f4a libraries
 #include <fun4all/SubsysReco.h>
-// root libraries
-#include <TFile.h>
-#include <TTree.h>
 // module utilities
 #include "TriggerClusterMakerDefs.h"
 
@@ -31,6 +28,7 @@
 class LL1Out;
 class PHCompositeNode;
 class RawCluster;
+class TowerInfoContainer;
 class TriggerPrimitiveContainer;
 
 
@@ -44,12 +42,14 @@ struct TriggerClusterMakerConfig {
   bool debug = true;
 
   // output options
-  bool        saveToNode  = true;
-  bool        saveToFile  = false;
-  std::string outNodeName = "TriggerCluster";
-  std::string outFileName = "test.root";
+  std::string outNodeName = "TriggerClusters";
 
   // input nodes
+  std::vector<std::string> inTowerNodes = {
+    "TOWERINFO_CALIB_CEMC",
+    "TOWERINFO_CALIB_HCALIN",
+    "TOWERINFO_CALIB_HCALOUT"
+  };
   std::vector<std::string> inLL1Nodes = {
     "LL1OUT_JET"
   };
@@ -57,9 +57,9 @@ struct TriggerClusterMakerConfig {
     "TRIGGERPRIMITIVES_JET",
     "TRIGGERPRIMITIVES_EMCAL",
     "TRIGGERPRIMITIVES_EMCAL_LL1",
-    "TRIGGERPRIMITIVES_HCALOUT",
     "TRIGGERPRIMITIVES_HCAL_LL1",
-    "TRIGGERPRIMITIVES_HCALIN"
+    "TRIGGERPRIMITIVES_HCALIN",
+    "TRIGGERPRIMITIVES_HCALOUT"
   };
 
 };
@@ -97,21 +97,18 @@ class TriggerClusterMaker : public SubsysReco {
   private:
 
     // private methods
-    void InitOutFile();
-    void InitOutTree();
     void InitOutNode(PHCompositeNode* topNode);
     void GrabNodes(PHCompositeNode* topNode);
     void MakeCluster(LL1Out* trigger);
-    void MakeCluster(TriggerPrimitive* trigger);
+    void MakeCluster(TriggerPrimitive* trigger, TriggerDefs::DetectorId detector);
 
-    // f4a members
+    // input nodes
+    std::vector<TowerInfoContainer*>        m_inTowerNodes;
     std::vector<LL1Out*>                    m_inLL1Nodes;
     std::vector<TriggerPrimitiveContainer*> m_inPrimNodes;
 
-    // output members
-    std::unique_ptr<TFile>               m_outFile       = NULL;
-    std::unique_ptr<TTree>               m_outTree       = NULL;
-    std::unique_ptr<RawClusterContainer> m_outClustStore = NULL;
+    // output node
+    RawClusterContainer* m_outClustNode = NULL;
 
     // module configuration
     TriggerClusterMakerConfig m_config;

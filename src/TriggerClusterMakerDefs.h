@@ -13,6 +13,8 @@
 
 // c++ utilities
 #include <limits>
+// calo base
+#include <calobase/TowerInfoDefs.h>
 // trigger libraries
 //   - TODO use local paths when ready
 #include <calotrigger/TriggerDefs.h>
@@ -40,30 +42,31 @@ namespace TriggerClusterMakerDefs {
 
 
 
-
   // constants ----------------------------------------------------------------
 
-  // FIXME deprecate one mapping is fixed
-  inline std::vector<std::pair<uint32_t, uint32_t>> EtaBinRange() {
-    static std::vector<std::pair<uint32_t, uint32_t>> range = {
-      {0, 3},
-      {1, 4},
-      {2, 5},
-      {3, 6},
-      {4, 7},
-      {5, 8},
-      {6, 9},
-      {7, 10},
-      {8, 11}
-    };
-    return range;
+  // --------------------------------------------------------------------------
+  //! No. of HCal towers (EMCal retowers) along eta of jet patch
+  // --------------------------------------------------------------------------
+  inline uint32_t NEtaInJet() {
+    static const uint32_t nEtaInJet = 4;
+    return nEtaInJet;
+  }
+
+  // --------------------------------------------------------------------------
+  //! No. of HCal towers (EMCal retowers) along phi of jet patch
+  // --------------------------------------------------------------------------
+  inline uint32_t NPhiInJet() {
+    static const uint32_t nPhiInJet = 4;
+    return nPhiInJet;
   }
 
 
 
   // methods ------------------------------------------------------------------
 
-  // FIXME deprecate once mapping is correct
+  // --------------------------------------------------------------------------
+  //! Calculate eta/phi bin manually based on sum key
+  // --------------------------------------------------------------------------
   uint32_t GetBinManually(const uint32_t sumkey, const int bin = Bin::Eta, const int type = Type::Prim) {
 
     // get relevant sum and primitive IDs
@@ -98,7 +101,47 @@ namespace TriggerClusterMakerDefs {
     }
     return sumID + (segment * primID);
 
-  }  // end 'GetEtaBin(uint32_t, int)'
+  }  // end 'GetEtaBin(uint32_t, int, int)'
+
+
+
+  // --------------------------------------------------------------------------
+  //! Get tower key based on provided eta, phi indices
+  // --------------------------------------------------------------------------
+  uint32_t GetKeyFromEtaPhiIndex(
+    const uint32_t eta,
+    const uint32_t phi,
+    const TriggerDefs::DetectorId detector
+  ) {
+
+    uint32_t key;
+    switch (detector) {
+
+      // get emcal tower index
+      case TriggerDefs::DetectorId::emcalDId:
+        key = TowerInfoDefs::encode_emcal(eta, phi);
+        std::cout << "    TEST index = " << TowerInfoDefs::decode_emcal(key);
+        break;
+
+      // get hcal tower index
+      case TriggerDefs::DetectorId::hcalinDId:
+        [[fallthrough]];
+      case TriggerDefs::DetectorId::hcaloutDId:
+        [[fallthrough]];
+      case TriggerDefs::DetectorId::hcalDId:
+        key = TowerInfoDefs::encode_hcal(eta, phi);
+        std::cout << "    TEST index = " << TowerInfoDefs::decode_hcal(key);
+        break;
+
+      // otherwise return dummy value
+      default:
+        key = std::numeric_limits<uint32_t>::max();
+        break;
+    }
+    return key;
+
+  } //  end 'GetKeyFromEtaPhiIndex(uint32_t, uint32_t, TriggerDefs::DetectorId)'
+
 
 }  // end TriggerClusterMakerDefs namespace
 
