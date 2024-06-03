@@ -59,7 +59,8 @@ void Fun4All_TestTriggerClusterMakerOnSim(
     "/sphenix/user/dlis/Projects/macros/CDBTest/emcal_ll1_lut.root",
     "/sphenix/user/dlis/Projects/macros/CDBTest/hcalin_ll1_lut.root",
     "/sphenix/user/dlis/Projects/macros/CDBTest/hcalout_ll1_lut.root"
-  }
+  },
+  const std::string outFile = "test.root"
 ) {
 
   // options ------------------------------------------------------------------
@@ -84,9 +85,27 @@ void Fun4All_TestTriggerClusterMakerOnSim(
 
   // trigger cluster maker options
   TriggerClusterMakerConfig cfg_maker {
-    .debug      = true,
-    .saveToNode = true,
-    .saveToFile = false
+    .debug       = true,
+    .saveToNode  = true,
+    .saveToFile  = false,
+    .outNodeName = "TriggerClusters",
+    .outFileName = "outFile.root",
+    .inTowerNodes = {
+      "TOWERINFO_CALIB_CEMC",
+      "TOWERINFO_CALIB_HCALIN",
+      "TOWERINFO_CALIB_HCALOUT"
+    },
+    .inLL1Nodes = {
+      "LL1OUT_JET"
+    },
+    .inPrimNodes = {
+      "TRIGGERPRIMITIVES_JET",
+      "TRIGGERPRIMITIVES_EMCAL",
+      "TRIGGERPRIMITIVES_EMCAL_LL1",
+      "TRIGGERPRIMITIVES_HCAL_LL1",
+      "TRIGGERPRIMITIVES_HCALIN",
+      "TRIGGERPRIMITIVES_HCALOUT"
+    }
   };
 
   // initialize f4a -----------------------------------------------------------
@@ -103,11 +122,17 @@ void Fun4All_TestTriggerClusterMakerOnSim(
 
   // register inputs/outputs and handelers ------------------------------------
 
+  // register input managers
   for (size_t iInput = 0; iInput < vecInFiles.size(); ++iInput) {
     Fun4AllDstInputManager* input = new Fun4AllDstInputManager("InputDstManager" + std::to_string(iInput));
     input -> AddListFile(vecInFiles[iInput]);
     f4a   -> registerInputManager(input);
   }
+
+  // register output manager
+  Fun4AllDstOutputManager* output = new Fun4AllDstOutputManager("OutputDstManager", outFile);
+  output -> StripNode(cfg_maker.outNodeName);
+  f4a    -> registerOutputManager(output);
 
   // register flag handler
   FlagHandler* handler = new FlagHandler();
