@@ -131,8 +131,7 @@ void Fun4All_TestTriggerClusterMakerOnSim(
 
   // register output manager
   Fun4AllDstOutputManager* output = new Fun4AllDstOutputManager("OutputDstManager", outFile);
-  output -> StripNode(cfg_maker.outNodeName);
-  f4a    -> registerOutputManager(output);
+  f4a -> registerOutputManager(output);
 
   // register flag handler
   FlagHandler* handler = new FlagHandler();
