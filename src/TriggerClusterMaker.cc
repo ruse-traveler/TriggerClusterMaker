@@ -52,8 +52,10 @@ TriggerClusterMaker::TriggerClusterMaker(const std::string &name) : SubsysReco(n
     std::cout << "TriggerClusterMaker::TriggerClusterMaker(const std::string &name) Calling ctor" << std::endl;
   }
 
+  // set tower nodes to null
+  std::fill(m_inTowerNodes.begin(), m_inTowerNodes.end(), nullptr);
+
   // make sure vectors are clear
-  m_inTowerNodes.clear();
   m_inLL1Nodes.clear();
   m_inPrimNodes.clear();
 
@@ -106,7 +108,8 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
   }
 
   // grab input nodes
-  GrabNodes(topNode);
+  GrabTowerNodes(topNode);
+  GrabTriggerNodes(topNode);
 
   // loop over LL1 nodes
   LL1Outv1::Range lloWordRange;
@@ -141,9 +144,9 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
       ++itTrgPrim
     ) {
 
-      // grab trigger primitve
+      // grab trigger primitve and decompose into clusters
       TriggerPrimitive* primitive = (*itTrgPrim).second;
-      MakeCluster(primitive, TriggerDefs::DetectorId::hcaloutDId);
+      MakeClustersFromPrimitive(primitive);
 
     }  // end trigger primitive loop
   }  // end trigger primitive node loop
@@ -219,24 +222,49 @@ void TriggerClusterMaker::InitOutNode(PHCompositeNode* topNode) {
 
 
 // ----------------------------------------------------------------------------
-//! Grab input nodes
+//! Grab input tower nodes
 // ----------------------------------------------------------------------------
-void TriggerClusterMaker::GrabNodes(PHCompositeNode* topNode) {
+void TriggerClusterMaker::GrabTowerNodes(PHCompositeNode* topNode) {
 
   // print debug message
   if (m_config.debug && (Verbosity() > 0)) {
-    std::cout << "TriggerClusterMaker::GrabNodes(PHCompositeNode*) Grabbing input nodes" << std::endl;
+    std::cout << "TriggerClusterMaker::GrabTowerNodes(PHCompositeNode*) Grabbing input tower nodes" << std::endl;
   }
 
-  // get tower info nodes
-  for (const std::string& inTowerNode : m_config.inTowerNodes) {
-    m_inTowerNodes.push_back(
-      findNode::getClass<TowerInfoContainer>(topNode, inTowerNode)
-    );
-    if (!m_inTowerNodes.back()) {
-      std::cerr<< PHWHERE << ": PANIC! Couldn't grab input TowerInfoContainer node '" << inTowerNode << "'!" << std::endl;
-      assert(m_inTowerNodes.back());
-    }
+  // get emcal tower info node
+  m_inTowerNodes[TriggerClusterMakerDefs::Cal::EM] = findNode::getClass<TowerInfoContainer>(topNode, m_config.inEMCalTowerNode);
+  if (!m_inTowerNodes[TriggerClusterMakerDefs::Cal::EM]) {
+    std::cerr << PHWHERE << ": PANIC! Couldn't grab EMCal towers from node '" << m_config.inEMCalTowerNode << "'!" << std::endl;
+    assert(m_inTowerNodes[TriggerClusterMakerDefs::Cal::EM]); 
+  }
+
+  // get inner hcal tower info node
+  m_inTowerNodes[TriggerClusterMakerDefs::Cal::IH] = findNode::getClass<TowerInfoContainer>(topNode, m_config.inIHCalTowerNode);
+  if (!m_inTowerNodes[TriggerClusterMakerDefs::Cal::EM]) {
+    std::cerr << PHWHERE << ": PANIC! Couldn't grab IHCal towers from node '" << m_config.inIHCalTowerNode << "'!" << std::endl;
+    assert(m_inTowerNodes[TriggerClusterMakerDefs::Cal::IH]); 
+  }
+
+  // get outer hcal tower info node
+  m_inTowerNodes[TriggerClusterMakerDefs::Cal::OH] = findNode::getClass<TowerInfoContainer>(topNode, m_config.inOHCalTowerNode);
+  if (!m_inTowerNodes[TriggerClusterMakerDefs::Cal::EM]) {
+    std::cerr << PHWHERE << ": PANIC! Couldn't grab OHCal towers from node '" << m_config.inOHCalTowerNode << "'!" << std::endl;
+    assert(m_inTowerNodes[TriggerClusterMakerDefs::Cal::OH]); 
+  }
+  return;
+
+}  // end 'GrabTowerNodes(PHCompositeNode*)'
+
+
+
+// ----------------------------------------------------------------------------
+//! Grab input trigger nodes
+// ----------------------------------------------------------------------------
+void TriggerClusterMaker::GrabTriggerNodes(PHCompositeNode* topNode) {
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 0)) {
+    std::cout << "TriggerClusterMaker::GrabTriggerNodes(PHCompositeNode*) Grabbing input trigger nodes" << std::endl;
   }
 
   // get LL1 nodes
@@ -262,67 +290,22 @@ void TriggerClusterMaker::GrabNodes(PHCompositeNode* topNode) {
   }
   return;
 
-}  // end 'GrabNodes(PHCompositeNode*)'
-
-
-
-// ----------------------------------------------------------------------------
-//! Make cluster from an LL1Out object
-// ----------------------------------------------------------------------------
-//   - FIXME it might be good to make this return a
-//     RawClusterv1...
-void TriggerClusterMaker::MakeCluster(LL1Out* trigger) {
-
-  // print debug message
-  if (m_config.debug && (Verbosity() > 1)) {
-    std::cout << "TriggerClusterMaker::MakeCluster(LL1Out*) Making cluster from LL1Out object" << std::endl;
-  }
-
-/* FIXME this isn't the right way of doing this...
-
-  // loop through trigger word
-  for (
-    auto itWord = trigger -> begin();
-    itWord != trigger -> end();
-    ++itWord
-  ) {
-
-    // get eta, phi bin of LL1
-    const uint64_t iEta = TriggerClusterMakerDefs::GetBinManually(
-      (*itTrgWord).first,
-       TriggerClusterMakerDefs::Bin::Eta,
-       TriggerClusterMakerDefs::Type::LL1
-    );
-    const uint64_t iPhi = TriggerClusterMakerDefs::GetBinManually(
-      (*itTrgWord).first,
-       TriggerClusterMakerDefs::Bin::Phi,
-       TriggerClusterMakerDefs::Type::LL1
-    );
-
-  }  // end trigger loop
-
-  // TODO things will be done here... //
-*/
-  return;
-
-}  // end 'MakeCluster(LL1Out*)'
+}  // end 'GrabTriggerNodes(PHCompositeNode*)'
 
 
 
 // ----------------------------------------------------------------------------
 //! Make cluster from a TriggerPrimitive object
 // ----------------------------------------------------------------------------
-//   - FIXME it might be good to make this return a
-//     RawClusterv1...
-void TriggerClusterMaker::MakeCluster(TriggerPrimitive* trigger, TriggerDefs::DetectorId detector) {
+void TriggerClusterMaker::MakeClustersFromPrimitive(TriggerPrimitive* primitive) {
 
   // print debug message
   if (m_config.debug && (Verbosity() > 1)) {
-    std::cout << "TriggerClusterMaker::MakeCluster(TriggerPrimitive*) Making cluster from TriggerPrimitive object" << std::endl;
+    std::cout << "TriggerClusterMaker::MakeClustersFromPrimitive(TriggerPrimitive*) Making clusters from TriggerPrimitive object" << std::endl;
   }
 
   // loop over sums
-  TriggerPrimitivev1::Range trgPrimSumRange = trigger -> getSums();
+  TriggerPrimitivev1::Range trgPrimSumRange = primitive -> getSums();
   for (
     TriggerPrimitive::Iter itPrimSum = trgPrimSumRange.first;
     itPrimSum != trgPrimSumRange.second;
@@ -340,22 +323,34 @@ void TriggerClusterMaker::MakeCluster(TriggerPrimitive* trigger, TriggerDefs::De
       ++itSum
     ) {
 
+      // get sum key and detector ID
+      auto sumKey = (*itPrimSum).first;
+      auto detID  = TriggerDefs::getDetectorId_from_TriggerSumKey(sumKey);
+      std::cout << "    CHECK-1 sum key = " << sumKey << ", detector ID = " << detID << std::endl;
+
       // get eta, phi bin of sum
       const uint32_t iEta = TriggerClusterMakerDefs::GetBinManually(
         (*itPrimSum).first,
          TriggerClusterMakerDefs::Bin::Eta,
          TriggerClusterMakerDefs::Type::Prim
       );
+      std::cout << "HERE0" << std::endl;
       const uint32_t iPhi = TriggerClusterMakerDefs::GetBinManually(
         (*itPrimSum).first,
          TriggerClusterMakerDefs::Bin::Phi,
          TriggerClusterMakerDefs::Type::Prim
       );
+      std::cout << "HERE1" << std::endl;
 
       // then get tower index
       //   - TODO iterate through all tower indices in range
-      const uint32_t key = TriggerClusterMakerDefs::GetKeyFromEtaPhiIndex(iEta, iPhi, detector);
-      std::cout << "    CHECK0 (eta, phi) = (" << iEta << ", " << iPhi << "), key = " << key
+      const uint32_t towKey = TriggerClusterMakerDefs::GetKeyFromEtaPhiIndex(iEta, iPhi, detID);
+      std::cout << "HERE2" << std::endl;
+
+      // now get tower
+      TowerInfo* tower = GetTowerFromKey(towKey, detID);
+      std::cout << "    CHECK0 (eta, phi) = (" << iEta << ", " << iPhi << ")\n"
+                << "           key = " << towKey << ", tower = " << tower
                 << std::endl;
 
     }  // end tower loop
@@ -366,6 +361,44 @@ void TriggerClusterMaker::MakeCluster(TriggerPrimitive* trigger, TriggerDefs::De
   }  // end primitive sum loop
   return;
 
-}  // end 'MakeCluster(TriggerPrimitive*, TriggerDefs::DetectorId)'
+}  // end 'MakeClustersFromPrimitive(TriggerPrimitive*)'
+
+
+
+// ----------------------------------------------------------------------------
+//! Grab tower from an input node based on key
+// ----------------------------------------------------------------------------
+TowerInfo* TriggerClusterMaker::GetTowerFromKey(const uint32_t key, const uint32_t det) {
+
+  // print debug message
+  if (m_config.debug && (Verbosity() > 2)) {
+    std::cout << "TriggerClusterMaker::GetTowerFromKey(uint32_t) Grabbing tower based on key..." << std::endl;
+  }
+
+  TowerInfo* tower;
+  switch (det) {
+
+    // get emcal tower index
+    case TriggerDefs::DetectorId::emcalDId:
+      tower = m_inTowerNodes[TriggerClusterMakerDefs::Cal::EM] -> get_tower_at_key(key);
+      break;
+
+    // get inner hcal tower index
+    case TriggerDefs::DetectorId::hcalinDId:
+      tower = m_inTowerNodes[TriggerClusterMakerDefs::Cal::IH] -> get_tower_at_key(key);
+      break;
+
+    case TriggerDefs::DetectorId::hcaloutDId:
+      tower = m_inTowerNodes[TriggerClusterMakerDefs::Cal::OH] -> get_tower_at_key(key);
+      break;
+
+    // otherwise return null
+    default:
+      tower = nullptr;
+      break;
+  }
+  return tower;
+
+}  // end 'GetTowerFromKey(uint32_t, uint32_t)'
 
 // end ------------------------------------------------------------------------

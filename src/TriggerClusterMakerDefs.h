@@ -28,6 +28,13 @@ namespace TriggerClusterMakerDefs {
 
   // enums --------------------------------------------------------------------
 
+  // calo layers
+  enum Cal {
+    EM,
+    IH,
+    OH
+  };
+
   // eta vs. phi bin
   enum Bin {
     Eta,
@@ -111,16 +118,15 @@ namespace TriggerClusterMakerDefs {
   uint32_t GetKeyFromEtaPhiIndex(
     const uint32_t eta,
     const uint32_t phi,
-    const TriggerDefs::DetectorId detector
+    const uint32_t det
   ) {
 
     uint32_t key;
-    switch (detector) {
+    switch (det) {
 
       // get emcal tower index
       case TriggerDefs::DetectorId::emcalDId:
         key = TowerInfoDefs::encode_emcal(eta, phi);
-        std::cout << "    TEST index = " << TowerInfoDefs::decode_emcal(key);
         break;
 
       // get hcal tower index
@@ -130,7 +136,6 @@ namespace TriggerClusterMakerDefs {
         [[fallthrough]];
       case TriggerDefs::DetectorId::hcalDId:
         key = TowerInfoDefs::encode_hcal(eta, phi);
-        std::cout << "    TEST index = " << TowerInfoDefs::decode_hcal(key);
         break;
 
       // otherwise return dummy value

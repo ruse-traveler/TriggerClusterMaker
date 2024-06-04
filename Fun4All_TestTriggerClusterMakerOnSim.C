@@ -87,11 +87,6 @@ void Fun4All_TestTriggerClusterMakerOnSim(
   TriggerClusterMakerConfig cfg_maker {
     .debug        = true,
     .outNodeName  = "TriggerClusters",
-    .inTowerNodes = {
-      "TOWERINFO_CALIB_CEMC",
-      "TOWERINFO_CALIB_HCALIN",
-      "TOWERINFO_CALIB_HCALOUT"
-    },
     .inLL1Nodes = {
       "LL1OUT_JET"
     },
@@ -102,7 +97,10 @@ void Fun4All_TestTriggerClusterMakerOnSim(
       "TRIGGERPRIMITIVES_HCAL_LL1",
       "TRIGGERPRIMITIVES_HCALIN",
       "TRIGGERPRIMITIVES_HCALOUT"
-    }
+    },
+    .inEMCalTowerNode = "TOWERINFO_CALIB_CEMC",
+    .inIHCalTowerNode = "TOWERINFO_CALIB_HCALIN",
+    .inOHCalTowerNode = "TOWERINFO_CALIB_HCALOUT"
   };
 
   // initialize f4a -----------------------------------------------------------
@@ -204,6 +202,7 @@ void Fun4All_TestTriggerClusterMakerOnSim(
 
   // finally, make trigger clusters
   TriggerClusterMaker* maker = new TriggerClusterMaker("TriggerClusterMaker");
+  maker -> Verbosity(verbosity);
   maker -> SetConfig(cfg_maker);
   f4a   -> registerSubsystem(maker);
 

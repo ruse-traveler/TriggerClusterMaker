@@ -44,12 +44,7 @@ struct TriggerClusterMakerConfig {
   // output options
   std::string outNodeName = "TriggerClusters";
 
-  // input nodes
-  std::vector<std::string> inTowerNodes = {
-    "TOWERINFO_CALIB_CEMC",
-    "TOWERINFO_CALIB_HCALIN",
-    "TOWERINFO_CALIB_HCALOUT"
-  };
+  // input trigger nodes
   std::vector<std::string> inLL1Nodes = {
     "LL1OUT_JET"
   };
@@ -61,6 +56,11 @@ struct TriggerClusterMakerConfig {
     "TRIGGERPRIMITIVES_HCALIN",
     "TRIGGERPRIMITIVES_HCALOUT"
   };
+
+  // input tower nodes
+  std::string inEMCalTowerNode = "TOWERINFO_CALIB_CEMC";
+  std::string inIHCalTowerNode = "TOWERINFO_CALIB_HCALIN";
+  std::string inOHCalTowerNode = "TOWERINFO_CALIB_HCALOUT";
 
 };
 
@@ -97,13 +97,14 @@ class TriggerClusterMaker : public SubsysReco {
   private:
 
     // private methods
-    void InitOutNode(PHCompositeNode* topNode);
-    void GrabNodes(PHCompositeNode* topNode);
-    void MakeCluster(LL1Out* trigger);
-    void MakeCluster(TriggerPrimitive* trigger, TriggerDefs::DetectorId detector);
+    void       InitOutNode(PHCompositeNode* topNode);
+    void       GrabTowerNodes(PHCompositeNode* topNode);
+    void       GrabTriggerNodes(PHCompositeNode* topNode);
+    void       MakeClustersFromPrimitive(TriggerPrimitive* primitive);
+    TowerInfo* GetTowerFromKey(const uint32_t key, const uint32_t det);
 
     // input nodes
-    std::vector<TowerInfoContainer*>        m_inTowerNodes;
+    std::array<TowerInfoContainer*, 3>      m_inTowerNodes;
     std::vector<LL1Out*>                    m_inLL1Nodes;
     std::vector<TriggerPrimitiveContainer*> m_inPrimNodes;
 
