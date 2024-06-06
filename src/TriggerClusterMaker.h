@@ -27,7 +27,7 @@
 // forward declarations
 class LL1Out;
 class PHCompositeNode;
-class RawCluster;
+class RawClusterv1;
 class TowerInfoContainer;
 class TriggerPrimitiveContainer;
 
@@ -100,7 +100,9 @@ class TriggerClusterMaker : public SubsysReco {
     void       InitOutNode(PHCompositeNode* topNode);
     void       GrabTowerNodes(PHCompositeNode* topNode);
     void       GrabTriggerNodes(PHCompositeNode* topNode);
-    void       MakeClustersFromPrimitive(TriggerPrimitive* primitive);
+    void       ProcessLL1s(LL1Out* lloNode);
+    void       ProcessPrimitives(TriggerPrimitiveContainer* primNode);
+    void       AddPrimitiveToCluster(TriggerPrimitive* primitive, RawClusterv1* cluster);
     TowerInfo* GetTowerFromKey(const uint32_t key, const uint32_t det);
 
     // input nodes

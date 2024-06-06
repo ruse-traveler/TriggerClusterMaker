@@ -112,45 +112,16 @@ int TriggerClusterMaker::process_event(PHCompositeNode* topNode) {
   GrabTriggerNodes(topNode);
 
   // loop over LL1 nodes
-  LL1Outv1::Range lloWordRange;
   for (auto inLL1Node : m_inLL1Nodes) {
-
-    // loop over trigger words
-    lloWordRange = inLL1Node -> getTriggerWords();
-    for (
-      LL1Outv1::Iter itTrgWord = lloWordRange.first;
-      itTrgWord != lloWordRange.second;
-      ++itTrgWord
-    ) {
-
-      // FIXME figure out how to get trigger
-      //   - primitives from LL1Out
-      //auto word = (*itTrgWord).second;
-      //MakeCluster(word);
-
-    }  // end trigger word loop
+    ProcessLL1s(inLL1Node);
   }  // end LL1 node loop
 
-
   // loop over trigger primitive nodes
-  TriggerPrimitiveContainerv1::Range trgPrimStoreRange;
   for (auto inPrimNode : m_inPrimNodes) {
-
-    // loop over primitives
-    trgPrimStoreRange = inPrimNode -> getTriggerPrimitives();
-    for (
-      TriggerPrimitiveContainerv1::Iter itTrgPrim = trgPrimStoreRange.first;
-      itTrgPrim != trgPrimStoreRange.second;
-      ++itTrgPrim
-    ) {
-
-      // grab trigger primitve and decompose into clusters
-      TriggerPrimitive* primitive = (*itTrgPrim).second;
-      MakeClustersFromPrimitive(primitive);
-
-    }  // end trigger primitive loop
+    ProcessPrimitives(inPrimNode);
   }  // end trigger primitive node loop
 
+  // end event
   return Fun4AllReturnCodes::EVENT_OK;
 
 }  // end 'process_event(PHCompositeNode*)'
@@ -166,7 +137,7 @@ int TriggerClusterMaker::End(PHCompositeNode *topNode) {
     std::cout << "TriggerClusterMaker::End(PHCompositeNode *topNode) This is the End..." << std::endl;
   }
 
-  /* TODO fill in */
+  /* nothing to do */
 
   return Fun4AllReturnCodes::EVENT_OK;
 
@@ -295,9 +266,65 @@ void TriggerClusterMaker::GrabTriggerNodes(PHCompositeNode* topNode) {
 
 
 // ----------------------------------------------------------------------------
-//! Make cluster from a TriggerPrimitive object
+//! Process a node of LL1s
 // ----------------------------------------------------------------------------
-void TriggerClusterMaker::MakeClustersFromPrimitive(TriggerPrimitive* primitive) {
+void TriggerClusterMaker::ProcessLL1s(LL1Out* lloNode) {
+
+  // loop over trigger words
+  LL1Outv1::Range lloWordRange = lloNode -> getTriggerWords();
+  for (
+    LL1Outv1::Iter itTrgWord = lloWordRange.first;
+    itTrgWord != lloWordRange.second;
+    ++itTrgWord
+  ) {
+
+    // FIXME figure out how to get trigger
+    //   - primitives from LL1Out
+    //auto word = (*itTrgWord).second;
+    //MakeCluster(word);
+
+  }  // end trigger word loop
+  return;
+
+}  // end 'ProcessLL1s(LL1Out*)'
+
+
+
+// ----------------------------------------------------------------------------
+//! Process a node of trigger primitives
+// ----------------------------------------------------------------------------
+void TriggerClusterMaker::ProcessPrimitives(TriggerPrimitiveContainer* primNode) {
+
+    // loop over primitives
+  TriggerPrimitiveContainerv1::Range trgPrimStoreRange = primNode -> getTriggerPrimitives();
+  for (
+    TriggerPrimitiveContainerv1::Iter itTrgPrim = trgPrimStoreRange.first;
+    itTrgPrim != trgPrimStoreRange.second;
+    ++itTrgPrim
+  ) {
+
+    // grab trigger primitve and decompose into clusters
+    TriggerPrimitive* primitive = (*itTrgPrim).second;
+    if (!primitive) continue;
+
+    // create new cluster and add primitive to it
+    RawClusterv1* cluster = new RawClusterv1();
+    AddPrimitiveToCluster(primitive, cluster);
+
+    // put cluster in output node
+    m_outClustNode -> AddCluster(cluster);
+
+  }  // end trigger primitive loop
+  return;
+
+}  // end 'ProcessPrimitives(TriggerPrimitiveContainer*)'
+
+
+
+// ----------------------------------------------------------------------------
+//! Add primitive to a given cluster
+// ----------------------------------------------------------------------------
+void TriggerClusterMaker::AddPrimitiveToCluster(TriggerPrimitive* primitive, RawClusterv1* cluster) {
 
   // print debug message
   if (m_config.debug && (Verbosity() > 1)) {
@@ -312,10 +339,7 @@ void TriggerClusterMaker::MakeClustersFromPrimitive(TriggerPrimitive* primitive)
     ++itPrimSum
   ) {
 
-    // create new cluster
-    RawClusterv1* cluster = new RawClusterv1();
-
-    // loop over towers in sum
+    // loop over summands
     auto sum = (*itPrimSum).second;
     for (
       auto itSum = sum -> begin();
@@ -329,39 +353,39 @@ void TriggerClusterMaker::MakeClustersFromPrimitive(TriggerPrimitive* primitive)
       std::cout << "    CHECK-1 sum key = " << sumKey << ", detector ID = " << detID << std::endl;
 
       // get eta, phi bin of sum
-      const uint32_t iEta = TriggerClusterMakerDefs::GetBinManually(
+      const uint32_t iEtaStart = TriggerClusterMakerDefs::GetBin(
         (*itPrimSum).first,
-         TriggerClusterMakerDefs::Bin::Eta,
+         TriggerClusterMakerDefs::Axis::Eta,
          TriggerClusterMakerDefs::Type::Prim
       );
-      std::cout << "HERE0" << std::endl;
-      const uint32_t iPhi = TriggerClusterMakerDefs::GetBinManually(
+      const uint32_t iPhiStart = TriggerClusterMakerDefs::GetBin(
         (*itPrimSum).first,
-         TriggerClusterMakerDefs::Bin::Phi,
+         TriggerClusterMakerDefs::Axis::Phi,
          TriggerClusterMakerDefs::Type::Prim
       );
-      std::cout << "HERE1" << std::endl;
 
-      // then get tower index
-      //   - TODO iterate through all tower indices in range
-      const uint32_t towKey = TriggerClusterMakerDefs::GetKeyFromEtaPhiIndex(iEta, iPhi, detID);
-      std::cout << "HERE2" << std::endl;
+      // then iterate through towers in sum
+      /* TODO */
 
-      // now get tower
+      // grab tower key
+      const uint32_t towKey = TriggerClusterMakerDefs::GetKeyFromEtaPhiIndex(iEtaStart, iPhiStart, detID);
+
+      // and finally grab tower
       TowerInfo* tower = GetTowerFromKey(towKey, detID);
-      std::cout << "    CHECK0 (eta, phi) = (" << iEta << ", " << iPhi << ")\n"
+      if (!tower) continue;
+      std::cout << "    CHECK0 (eta, phi) = (" << iEtaStart << ", " << iPhiStart << ")\n"
                 << "           key = " << towKey << ", tower = " << tower
                 << std::endl;
 
-    }  // end tower loop
+      // and add to custer
+      cluster -> addTower(towKey, tower -> get_energy());
 
-    // put cluster in node
-    m_outClustNode -> AddCluster(cluster);
+    }  // end tower loop
 
   }  // end primitive sum loop
   return;
 
-}  // end 'MakeClustersFromPrimitive(TriggerPrimitive*)'
+}  // end 'MakeClustersFromPrimitive(TriggerPrimitive*, RawClusterv1*)'
 
 
 
