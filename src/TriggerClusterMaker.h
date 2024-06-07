@@ -3,7 +3,7 @@
  *  \authors Derek Anderson
  *  \date    05.15.2024
  *
- *  A Fun4All QA module to construct trigger clusters,
+ *  A Fun4All module to construct trigger clusters,
  *  jet patches stored in RawCluster objects, for
  *  downstream analysis
  */
