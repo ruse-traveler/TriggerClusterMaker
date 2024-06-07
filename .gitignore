@@ -2,10 +2,8 @@ input/
 test/
 ref/
 src/*
-!src/TriggerClusterMaker.cc
-!src/TriggerClusterMaker.h
-!src/TriggerClusterMakerDefs.h
-!src/TriggerClusterMakerLinkDef.h
+!src/*.cc
+!src/*.h
 !src/autogen.sh
 !src/configure.ac
 !src/Makefile.am
