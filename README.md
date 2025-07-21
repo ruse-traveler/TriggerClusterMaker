@@ -1,5 +1,7 @@
 # TriggerClusterMaker
 
+**Note:** this is a pubic archive. This code is now maintained as part of [sPHENIX-Collaboration/analysis](https://github.com/sPHENIX-Collaboration/analysis)
+
 ### Author:
 Derek Anderson
 
